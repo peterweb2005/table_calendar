@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../utils.dart';
@@ -12,6 +14,9 @@ class TableBasicsExample extends StatefulWidget {
 }
 
 class _TableBasicsExampleState extends State<TableBasicsExample> {
+  //
+  final log = Logger('BasicsExample');
+
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -23,6 +28,74 @@ class _TableBasicsExampleState extends State<TableBasicsExample> {
         title: Text('TableCalendar - Basics'),
       ),
       body: TableCalendar(
+        //
+        locale: 'zh_HK',
+        calendarBuilders: CalendarBuilders(
+          /// Signature for a function that creates a single event marker for a given `day`.
+          /// Contains a single `event` associated with that `day`.
+          singleMarkerBuilder: (context, day, event) {
+            log.fine('singleMarkerBuilder()');
+            //
+            final shorterSide = 20;
+            final calendarStyle = const CalendarStyle();
+            final markerSize = calendarStyle.markerSize ??
+                (shorterSide - calendarStyle.cellMargin.vertical) *
+                    calendarStyle.markerSizeScale;
+            //
+            return Container(
+              width: markerSize,
+              height: markerSize,
+              margin: calendarStyle.markerMargin,
+              decoration: calendarStyle.markerDecoration,
+            );
+            //
+            return Text(event.toString());
+          },
+
+          /// Signature for a function that creates an event marker for a given `day`.
+          /// Contains a list of `events` associated with that `day`.
+          markerBuilder: (context, day, events) {
+            log.fine('markerBuilder()');
+            return Text(events.length.toString());
+          },
+          selectedBuilder: (context, day, focusedDay) {
+            log.fine('selectedBuilder()');
+            //
+            final calendarStyle = const CalendarStyle();
+            //
+            final text = '${day.day}';
+            final margin = calendarStyle.cellMargin;
+            final duration = const Duration(milliseconds: 1000);
+            //
+            return AnimatedContainer(
+              duration: duration,
+              margin: margin,
+              //decoration: calendarStyle.selectedDecoration,
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(text, style: calendarStyle.selectedTextStyle),
+            );
+          },
+          // week day label
+          dowBuilder: (context, DateTime day) {
+            log.fine('dowBuilder()');
+            log.finest('day: ', day);
+            if (day.weekday == DateTime.sunday) {
+              final text = DateFormat.E().format(day);
+
+              return Center(
+                child: Text(
+                  text,
+                  style: TextStyle(color: Colors.red, fontSize: 24),
+                ),
+              );
+            }
+          },
+        ),
+        //
         firstDay: kFirstDay,
         lastDay: kLastDay,
         focusedDay: _focusedDay,

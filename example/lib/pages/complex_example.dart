@@ -5,6 +5,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../utils.dart';
@@ -15,6 +16,9 @@ class TableComplexExample extends StatefulWidget {
 }
 
 class _TableComplexExampleState extends State<TableComplexExample> {
+  //
+  final log = Logger('ComplexExample');
+
   late final PageController _pageController;
   late final ValueNotifier<List<Event>> _selectedEvents;
   final ValueNotifier<DateTime> _focusedDay = ValueNotifier(DateTime.now());
@@ -95,6 +99,13 @@ class _TableComplexExampleState extends State<TableComplexExample> {
     }
   }
 
+  bool _isWeekend(
+    DateTime day, {
+    List<int> weekendDays = const [DateTime.saturday, DateTime.sunday],
+  }) {
+    return weekendDays.contains(day.weekday);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,6 +147,145 @@ class _TableComplexExampleState extends State<TableComplexExample> {
             },
           ),
           TableCalendar<Event>(
+            //
+            locale: 'zh_HK',
+            rowHeight: 60,
+            //dowHeight: 30,
+            daysOfWeekHeight: 60,
+            calendarBuilders: CalendarBuilders(
+              // marker widget of a item (here event)
+              // ie: date with item
+              // eg: 2 items draw 2 markers in certain date
+              /*singleMarkerBuilder: (context, day, event) {
+                log.fine('singleMarkerBuilder()');
+                //
+                final shorterSide = 64;
+                final calendarStyle = const CalendarStyle();
+                final markerSize = calendarStyle.markerSize ??
+                    (shorterSide - calendarStyle.cellMargin.vertical) *
+                        calendarStyle.markerSizeScale;
+                //
+                return Container(
+                  //color: Colors.white,
+                  width: markerSize,
+                  height: markerSize,
+                  margin: calendarStyle.markerMargin,
+                  //decoration: calendarStyle.markerDecoration,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                );
+              },*/
+              singleMarkerBuilder: (context, day, event) {
+                return Container();
+              },
+              /*// build multi markers a time
+              // eg: can print "4" for 4 markers
+              markerBuilder: (context, day, events) {
+                log.fine('markerBuilder()');
+                int length = events.length;
+                if (length != 0) {
+                  return Text(events.length.toString());
+                } else {
+                  return Container();
+                }
+              },*/
+              //
+              defaultBuilder: (context, day, focusedDay) {
+                log.fine('defaultBuilder()');
+                log.finest('day: ', day);
+                //
+                List<Event> events = _getEventsForDay(day);
+                Decoration? decoration;
+                if (events.length != 0) {
+                  decoration = BoxDecoration(color: Colors.yellow);
+                }
+                //
+                final calendarStyle = const CalendarStyle();
+                final text = '${day.day}';
+                final margin = calendarStyle.cellMargin;
+                final duration = const Duration(milliseconds: 1000);
+                final weekendDays = const [DateTime.saturday, DateTime.sunday];
+                final isWeekend = _isWeekend(day, weekendDays: weekendDays);
+                //
+                return AnimatedContainer(
+                  duration: duration,
+                  margin: margin,
+                  decoration: decoration != null
+                      ? decoration
+                      : isWeekend
+                          ? calendarStyle.weekendDecoration
+                          : calendarStyle.defaultDecoration,
+                  alignment: Alignment.center,
+                  child: Text(
+                    text,
+                    style: isWeekend
+                        ? calendarStyle.weekendTextStyle
+                        : calendarStyle.defaultTextStyle,
+                  ),
+                );
+              },
+              // selected day widget
+              selectedBuilder: (context, day, focusedDay) {
+                log.fine('selectedBuilder()');
+                //
+                final calendarStyle = const CalendarStyle();
+                //
+                final text = '${day.day}';
+                final margin = calendarStyle.cellMargin;
+                final duration = const Duration(milliseconds: 1000);
+                //
+                return AnimatedContainer(
+                  duration: duration,
+                  margin: margin,
+                  decoration: calendarStyle.selectedDecoration,
+                  /*decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),*/
+                  alignment: Alignment.center,
+                  child: Text(text, style: calendarStyle.selectedTextStyle),
+                );
+              },
+              // week day widget
+              dowBuilder: (context, DateTime day) {
+                //
+                final locale = 'zh_HK';
+                final weekendDays = const [DateTime.saturday, DateTime.sunday];
+                final daysOfWeekStyle = const DaysOfWeekStyle();
+                //
+                final weekdayString =
+                    daysOfWeekStyle.dowTextFormatter?.call(day, locale) ??
+                        DateFormat.E(locale).format(day);
+
+                final isWeekend = _isWeekend(day, weekendDays: weekendDays);
+                //
+                return Center(
+                  child: Text(
+                    weekdayString,
+                    style: isWeekend
+                        ? daysOfWeekStyle.weekendStyle
+                        : daysOfWeekStyle.weekdayStyle,
+                  ),
+                );
+              },
+              /*dowBuilder: (context, DateTime day) {
+                log.fine('dowBuilder()');
+                log.finest('day: ', day);
+                if (day.weekday == DateTime.sunday) {
+                  final text = DateFormat.E().format(day);
+
+                  return Center(
+                    child: Text(
+                      text,
+                      //style: TextStyle(color: Colors.red, fontSize: 24),
+                    ),
+                  );
+                }
+              },*/
+            ),
+            //
             firstDay: kFirstDay,
             lastDay: kLastDay,
             focusedDay: _focusedDay.value,

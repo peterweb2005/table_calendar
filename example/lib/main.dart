@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:flutter/material.dart';
+import 'package:flutter_package/ext.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:logging/logging.dart';
+import 'package:table_calendar_example/service/app_service.dart';
 
 import 'pages/basics_example.dart';
 import 'pages/complex_example.dart';
@@ -10,19 +13,37 @@ import 'pages/events_example.dart';
 import 'pages/multi_example.dart';
 import 'pages/range_example.dart';
 
-void main() {
-  initializeDateFormatting().then((_) => runApp(MyApp()));
+void main() async {
+  //
+  final product = false;
+  // logging
+  LoggerExt.configLogging(product: product);
+  final log = Logger('Main');
+  log.info('main()');
+  log.finest('product: ', product);
+  //
+  await initializeDateFormatting();
+  //
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    //
+    final appService = AppService();
+    //
+    final themeData = appService.newThemeData(null);
+    //
     return MaterialApp(
       title: 'TableCalendar Example',
-      theme: ThemeData(
+      /*theme: ThemeData(
         primarySwatch: Colors.blue,
-      ),
-      home: StartPage(),
+      ),*/
+      theme: themeData,
+      //home: StartPage(),
+      //home: TableBasicsExample(),
+      home: TableComplexExample(),
     );
   }
 }
